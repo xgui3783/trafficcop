@@ -1,6 +1,7 @@
 const PORT = process.env.PORT || 8080
 const REDIRECT_URL = process.env.REDIRECT_URL
 const code = Number(process.env.STATUS_CODE || 302)
+const CORS = process.env.CORS
 
 if (![302, 301, 307, 308].includes(code)) {
   throw new Error(`STATUS_CODE, if defined, must be either 302 or 301`)
@@ -16,6 +17,11 @@ const app = express()
 console.log(`redirecting / to ${REDIRECT_URL}`)
 
 app.disable('x-powered-by')
+
+if (CORS) {
+  const cors = require("cors")
+  app.use(cors())
+}
 
 app.get('*', (req, res) => {
   const { path, query } = req
