@@ -24,8 +24,9 @@ if (CORS) {
 }
 
 app.get('*', (req, res) => {
-  const { path, query } = req
+  const { path, query, headers, hostname } = req
   const url = new URL(REDIRECT_URL.replace(/\/+$/, '') + path)
+  console.log(`Redirecting to ${REDIRECT_URL} - ${headers.referer} - ${hostname} - ${path}`)
   for (const key in query) {
     url.searchParams.set(key, query[key])
   }
