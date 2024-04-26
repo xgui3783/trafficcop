@@ -1,0 +1,27 @@
+name: '[dockerimg]'
+
+on:
+  push:
+    branches: ["master"]
+
+env:
+  DOCKER_REGISTRY: 'docker-registry.ebrains.eu/siibra/'
+  DOCKER_IMG: 'trafficcop'
+  DOCKER_TAG: 'latest'
+
+jobs:
+  build-docker-img:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - run: |
+        TAG="${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMG }}:${{ env.DOCKER_TAG }}"
+        docker build -t "$TAG" .
+    - run: |
+        docker login \
+          -u '${{ secrets.EBRAINS_DOCKER_REG_USER }}' \
+          -p '${{ secrets.EBRAINS_DOCKER_REG_TOKEN }}' \
+          docker-registry.ebrains.eu
+        TAG="${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMG }}:${{ env.DOCKER_TAG }}"
+        docker push $TAG
