@@ -7,7 +7,17 @@ on:
 env:
   DOCKER_REGISTRY: 'docker-registry.ebrains.eu/siibra/'
   DOCKER_IMG: 'trafficcop'
-  DOCKER_TAG: 'latest'
+
+  TAG: 'latest'
+
+  EBRAINS_REGISTRY: docker-registry.ebrains.eu
+  EBRAINS_NS: docker-registry.ebrains.eu/siibra/trafficcop
+  DOCKERHUB_NS: xgui3783/trafficcop
+  GH_REGISTRY: ghcr.io
+  GH_NS: ${{ github.repository }}
+
+  TMP_TAG: trafficcop
+
 
 jobs:
 
@@ -22,26 +32,19 @@ jobs:
     - uses: actions/checkout@v4
     - id: build-step
       run: |
-        TAG="${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMG }}:${{ env.DOCKER_TAG }}"
-        docker build -t "$TAG" .
+        docker build -t ${{ env.TMP_TAG }}:${{ env.TAG }} .
     - run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-        GITHUB_TAG=ghcr.io/${{ github.repository }}:${{ env.DOCKER_TAG }}
-        docker tag $TAG $GITHUB_TAG
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.GH_REGISTRY }} -u ${{ github.actor }} --password-stdin
+        GITHUB_TAG=${{ env.GH_REGISTRY }}/${{ env.GH_NS }}:${{ env.TAG }}
+        docker tag ${{ env.TMP_TAG }}:${{ env.TAG }} $GITHUB_TAG
         docker push $GITHUB_TAG
     - run: |
-        docker login \
-          -u '${{ secrets.DOCKERHUB_USER }}' \
-          -p '${{ secrets.DOCKERHUB_SECRET }}' 
-
-        TAG="${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMG }}:${{ env.DOCKER_TAG }}"
-        DOCKERHUB_TAG=xgui3783/trafficcop:${{ env.DOCKER_TAG }}
-        docker tag $TAG $DOCKERHUB_TAG
+        echo ${{ secrets.DOCKERHUB_SECRET }} | docker login -u ${{ secrets.DOCKERHUB_USER }} --password-stdin
+        DOCKERHUB_TAG=${{ env.DOCKERHUB_NS }}:${{ env.TAG }}
+        docker tag ${{ env.TMP_TAG }}:${{ env.TAG }} $DOCKERHUB_TAG
         docker push $DOCKERHUB_TAG
     - run: |
-        docker login \
-          -u '${{ secrets.EBRAINS_DOCKER_REG_USER }}' \
-          -p '${{ secrets.EBRAINS_DOCKER_REG_TOKEN }}' \
-          docker-registry.ebrains.eu
-        TAG="${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMG }}:${{ env.DOCKER_TAG }}"
-        docker push $TAG
+        echo '${{ secrets.EBRAINS_DOCKER_REG_TOKEN }}' | docker login ${{ env.EBRAINS_REGISTRY }} -u '${{ secrets.EBRAINS_DOCKER_REG_USER }}' --password-stdin
+        EBRAINS_TAG=${{ env.EBRAINS_REGISTRY }}/${{ env.EBRAINS_NS }}:${{ env.TAG }}
+        docker tag ${{ env.TMP_TAG }}:${{ env.TAG }} $EBRAINS_TAG
+        docker push $EBRAINS_TAG
