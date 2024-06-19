@@ -15,9 +15,19 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - run: |
+    - id: build-step
+      run: |
         TAG="${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMG }}:${{ env.DOCKER_TAG }}"
         docker build -t "$TAG" .
+    - run: |
+        docker login \
+          -u '${{ secrets.DOCKERHUB_USER }}'
+          -p '${{ secrets.DOCKERHUB_SECRET }}'
+          hub.docker.com
+        TAG="${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMG }}:${{ env.DOCKER_TAG }}"
+        DOCKERHUB_TAG=xgui3783/trafficcop:latest
+        docker tag $TAG $DOCKERHUB_TAG
+        docker push $DOCKERHUB_TAG
     - run: |
         docker login \
           -u '${{ secrets.EBRAINS_DOCKER_REG_USER }}' \

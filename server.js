@@ -2,6 +2,7 @@ const PORT = process.env.PORT || 8080
 const REDIRECT_URL = process.env.REDIRECT_URL
 const code = Number(process.env.STATUS_CODE || 302)
 const CORS = process.env.CORS
+const DONOT_FOLLOW_PATH = process.env.DONOT_FOLLOW_PATH
 
 if (![302, 301, 307, 308].includes(code)) {
   throw new Error(`STATUS_CODE, if defined, must be either 302 or 301`)
@@ -24,6 +25,10 @@ if (CORS) {
 }
 
 app.get('*', (req, res) => {
+  if (DONOT_FOLLOW_PATH) {
+    res.redirect(code, REDIRECT_URL)
+    return
+  }
   const { path, query, headers, hostname } = req
   const url = new URL(REDIRECT_URL.replace(/\/+$/, '') + path)
   console.log(`Redirecting to ${REDIRECT_URL} - ${headers.referer} - ${hostname} - ${path}`)
