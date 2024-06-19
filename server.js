@@ -24,9 +24,27 @@ if (CORS) {
   app.use(cors())
 }
 
+const redirectHtml = url => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting ... </title>
+</head>
+<body>
+    Redirecting to ${JSON.stringify(url)}
+</body>
+<script>
+    window.location.replace(${JSON.stringify(url)})
+</script>
+</html>
+`
+
 app.get('*', (req, res) => {
   if (DONOT_FOLLOW_PATH) {
-    res.redirect(code, REDIRECT_URL)
+    res.setHeader("content-type", "text/html; charset=utf-8")
+    res.send(redirectHtml(REDIRECT_URL))
     return
   }
   const { path, query, headers, hostname } = req

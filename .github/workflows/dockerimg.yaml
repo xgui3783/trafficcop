@@ -10,9 +10,14 @@ env:
   DOCKER_TAG: 'latest'
 
 jobs:
+
   build-docker-img:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
     steps:
     - uses: actions/checkout@v4
     - id: build-step
@@ -20,12 +25,17 @@ jobs:
         TAG="${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMG }}:${{ env.DOCKER_TAG }}"
         docker build -t "$TAG" .
     - run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        GITHUB_TAG=ghcr.io/${{ github.repository }}:${{ env.DOCKER_TAG }}
+        docker tag $TAG $GITHUB_TAG
+        docker push $GITHUB_TAG
+    - run: |
         docker login \
           -u '${{ secrets.DOCKERHUB_USER }}' \
           -p '${{ secrets.DOCKERHUB_SECRET }}' 
 
         TAG="${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMG }}:${{ env.DOCKER_TAG }}"
-        DOCKERHUB_TAG=xgui3783/trafficcop:latest
+        DOCKERHUB_TAG=xgui3783/trafficcop:${{ env.DOCKER_TAG }}
         docker tag $TAG $DOCKERHUB_TAG
         docker push $DOCKERHUB_TAG
     - run: |
